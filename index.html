@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz de Apostas</title>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            background: linear-gradient(to bottom right, #0F172A, #1E293B);
+            font-family: system-ui, -apple-system, sans-serif;
+            padding: 2rem;
+            color: white;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .quiz-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .quiz-title {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1.5rem;
+            background: rgba(249, 115, 22, 0.2);
+            border: 1px solid rgba(249, 115, 22, 0.3);
+            border-radius: 9999px;
+            color: #F97316;
+            margin-bottom: 1rem;
+        }
+
+        .quiz-subtitle {
+            font-size: 2.5rem;
+            margin-bottom: 2rem;
+            background: linear-gradient(to right, #FFD700, #F97316);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 9999px;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(to right, #F97316, #FFD700);
+            transition: width 0.5s ease-in-out;
+        }
+
+        .quiz-card {
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(249, 115, 22, 0.2);
+            border-radius: 1rem;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        .question {
+            font-size: 1.5rem;
+            margin-bottom: 2rem;
+            text-align: center;
+            color: #FFD700;
+        }
+
+        .options {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .option {
+            background: rgba(249, 115, 22, 0.1);
+            border: 1px solid rgba(249, 115, 22, 0.2);
+            padding: 1rem;
+            border-radius: 0.75rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .option:hover {
+            transform: scale(1.02);
+            border-color: #F97316;
+            background: rgba(249, 115, 22, 0.2);
+            box-shadow: 0 0 15px rgba(249, 115, 22, 0.3);
+        }
+
+        .option.selected {
+            border-color: #FFD700;
+            background: rgba(249, 115, 22, 0.3);
+        }
+
+        .completion-card {
+            text-align: center;
+            display: none;
+        }
+
+        .completion-title {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            color: #FFD700;
+        }
+
+        .bonus-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: linear-gradient(to right, #F97316, #FFD700);
+            color: white;
+            text-decoration: none;
+            padding: 1rem 2rem;
+            border-radius: 0.75rem;
+            margin: 1rem 0;
+            transition: all 0.3s ease;
+            font-weight: bold;
+        }
+
+        .bonus-link:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(249, 115, 22, 0.4);
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            padding: 1rem 2rem;
+            border-radius: 0.5rem;
+            color: white;
+            transform: translateY(150%);
+            transition: transform 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .toast.success {
+            background: #22c55e;
+        }
+
+        .toast.error {
+            background: #ef4444;
+        }
+
+        .toast.info {
+            background: #F97316;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+        }
+
+        .icon {
+            width: 24px;
+            height: 24px;
+        }
+
+        @media (max-width: 640px) {
+            body {
+                padding: 1rem;
+            }
+
+            .quiz-subtitle {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="quiz-header">
+            <div class="quiz-title">
+                <i data-lucide="trophy" class="icon"></i>
+                Quiz de Apostas
+            </div>
+            <h1 class="quiz-subtitle">Teste seus Conhecimentos</h1>
+            <div class="progress-bar">
+                <div class="progress-bar-fill" style="width: 33%"></div>
+            </div>
+        </div>
+
+        <div class="quiz-card">
+            <div id="question" class="question"></div>
+            <div id="options" class="options"></div>
+        </div>
+
+        <div id="completion" class="completion-card quiz-card">
+            <h2 class="completion-title">🎉 Parabéns! 🎉</h2>
+            <p>Você acaba de ganhar um bônus de 100% no seu primeiro depósito!</p>
+            <a href="https://c1li7tt5ck.com/?serial=44945&creative_id=311&anid=" target="_blank" rel="noopener noreferrer" class="bonus-link">
+                <i data-lucide="coins" class="icon"></i>
+                Clique aqui para acessar a melhor casa de apostas e aproveitar essa oferta exclusiva!
+            </a>
+            <p>Não perca essa chance de começar com o pé direito! 🚀</p>
+        </div>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <script>
+        // Inicializa os ícones do Lucide
+        lucide.createIcons();
+
+        const questions = [
+            {
+                id: 1,
+                text: "Você gosta de:",
+                options: [
+                    { text: "Esporte", icon: "trophy" },
+                    { text: "Cassino", icon: "coins" }
+                ],
+                correctAnswer: 0,
+                isPreference: true
+            },
+            {
+                id: 2,
+                text: "Qual jogo de cassino é o mais jogado?",
+                options: [
+                    { text: "Fortune Tiger", icon: "trophy" },
+                    { text: "Fortune Mouse", icon: "mouse" },
+                    { text: "Fortune Ox", icon: "gem" },
+                    { text: "Fortune Dragon", icon: "flame" }
+                ],
+                correctAnswer: 0
+            },
+            {
+                id: 3,
+                text: "Você gosta de um bônus no primeiro depósito?",
+                options: [
+                    { text: "Sim", icon: "dollar-sign" },
+                    { text: "Não", icon: "x" }
+                ],
+                correctAnswer: 0
+            }
+        ];
+
+        let currentQuestion = 0;
+        let score = 0;
+
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('toast');
+            const icon = type === 'success' ? 'check-circle' : 
+                        type === 'error' ? 'x-circle' : 'info';
+            toast.innerHTML = `
+                <i data-lucide="${icon}" class="icon"></i>
+                ${message}
+            `;
+            lucide.createIcons();
+            toast.className = `toast ${type} show`;
+            setTimeout(() => {
+                toast.className = 'toast';
+            }, 3000);
+        }
+
+        function updateProgress() {
+            const progress = ((currentQuestion + 1) / questions.length) * 100;
+            document.querySelector('.progress-bar-fill').style.width = `${progress}%`;
+        }
+
+        function showQuestion() {
+            const question = questions[currentQuestion];
+            document.getElementById('question').textContent = question.text;
+            
+            const optionsContainer = document.getElementById('options');
+            optionsContainer.innerHTML = '';
+            
+            question.options.forEach((option, index) => {
+                const optionElement = document.createElement('div');
+                optionElement.className = 'option';
+                optionElement.innerHTML = `
+                    <i data-lucide="${option.icon}" class="icon"></i>
+                    ${option.text}
+                `;
+                optionElement.onclick = () => handleAnswer(index);
+                optionsContainer.appendChild(optionElement);
+            });
+            lucide.createIcons();
+        }
+
+        function handleAnswer(selectedIndex) {
+            const question = questions[currentQuestion];
+            const options = document.querySelectorAll('.option');
+            
+            if (options[selectedIndex].classList.contains('selected')) return;
+            
+            options.forEach(option => option.onclick = null);
+            options[selectedIndex].classList.add('selected');
+
+            if (question.isPreference) {
+                showToast("Obrigado pela resposta!", "info");
+            } else {
+                const correct = selectedIndex === question.correctAnswer;
+                if (correct) {
+                    score++;
+                    showToast("Correto! Muito bem! Continue assim!", "success");
+                } else {
+                    showToast("Incorreto. Não desanime, próxima questão!", "error");
+                }
+            }
+
+            setTimeout(() => {
+                if (currentQuestion < questions.length - 1) {
+                    currentQuestion++;
+                    updateProgress();
+                    showQuestion();
+                } else {
+                    document.querySelector('.quiz-card').style.display = 'none';
+                    document.getElementById('completion').style.display = 'block';
+                }
+            }, 1500);
+        }
+
+        // Initialize quiz
+        showQuestion();
+    </script>
+</body>
+</html>
